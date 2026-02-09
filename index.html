@@ -1,0 +1,40 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>PropyGo</title>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlByb3B5R28iLAogICJzaG9ydF9uYW1lIjogIlByb3B5R28iLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgInRoZW1lX2NvbG9yIjogIiM0ZjQ2ZTUiLAogICJpY29ucyI6IFt7ICJzcmMiOiAiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvNjAyLzYwMjI3NS5wbmciLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3BuZyIgfV0KfQ==">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 font-sans antialiased text-slate-900">
+    <div id="app" class="flex flex-col h-screen max-w-lg mx-auto overflow-hidden bg-white shadow-2xl">
+        <header class="px-6 pt-12 pb-4 flex justify-between items-center border-b border-slate-100">
+            <h1 class="text-2xl font-black tracking-tighter text-indigo-600 uppercase">PropyGo</h1>
+            <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg font-bold">JD</div>
+        </header>
+        <main class="flex-1 overflow-y-auto px-4 py-6 pb-32">
+            <div class="bg-indigo-600 rounded-3xl p-6 text-white shadow-xl mb-8">
+                <h2 class="text-xl font-bold">Inversiones Activas</h2>
+                <p class="text-indigo-100 text-sm mt-1">Tu capital rindiendo hoy.</p>
+            </div>
+            <div class="bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm mb-6">
+                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800" class="h-56 w-full object-cover">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-bold text-xl text-slate-800">Propiedad de Prueba</h4>
+                        <span class="text-indigo-600 font-black text-lg">U$D 150k</span>
+                    </div>
+                    <button onclick="alert('Conectando con dueño...')" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold active:scale-95 transition-all">Contactar</button>
+                </div>
+            </div>
+        </main>
+        <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t pb-10 pt-4 flex justify-around items-center z-50">
+            <span class="text-[10px] font-black uppercase text-indigo-600">Mapa</span>
+            <div class="bg-indigo-600 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-xl -mt-12 border-4 border-white">+</div>
+            <span class="text-[10px] font-black uppercase text-slate-400">Lista</span>
+        </nav>
+    </div>
+</body>
+</html>
