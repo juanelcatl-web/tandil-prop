@@ -1,40 +1,132 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PropyGo</title>
+    <title>PropyGo - Panel de Inversión</title>
     <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlByb3B5R28iLAogICJzaG9ydF9uYW1lIjogIlByb3B5R28iLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgInRoZW1lX2NvbG9yIjogIiM0ZjQ2ZTUiLAogICJpY29ucyI6IFt7ICJzcmMiOiAiaHR0cHM6Ly9jZG4taWNvbnMtcG5nLmZsYXRpY29uLmNvbS81MTIvNjAyLzYwMjI3NS5wbmciLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3BuZyIgfV0KfQ==">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        #map { height: 100%; width: 100%; z-index: 1; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
 </head>
 <body class="bg-slate-50 font-sans antialiased text-slate-900">
-    <div id="app" class="flex flex-col h-screen max-w-lg mx-auto overflow-hidden bg-white shadow-2xl">
-        <header class="px-6 pt-12 pb-4 flex justify-between items-center border-b border-slate-100">
+
+    <div id="app" class="flex flex-col h-[100dvh] max-w-lg mx-auto overflow-hidden bg-white shadow-2xl relative">
+        
+        <header class="px-6 pt-12 pb-4 flex justify-between items-center border-b border-slate-100 bg-white/80 backdrop-blur-md z-50">
             <h1 class="text-2xl font-black tracking-tighter text-indigo-600 uppercase">PropyGo</h1>
-            <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg font-bold">JD</div>
-        </header>
-        <main class="flex-1 overflow-y-auto px-4 py-6 pb-32">
-            <div class="bg-indigo-600 rounded-3xl p-6 text-white shadow-xl mb-8">
-                <h2 class="text-xl font-bold">Inversiones Activas</h2>
-                <p class="text-indigo-100 text-sm mt-1">Tu capital rindiendo hoy.</p>
+            <div id="status-online" class="flex items-center gap-2 bg-green-100 px-3 py-1 rounded-full text-green-700 text-[10px] font-bold">
+                ● ONLINE
             </div>
-            <div class="bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm mb-6">
-                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800" class="h-56 w-full object-cover">
-                <div class="p-6">
-                    <div class="flex justify-between items-start mb-2">
-                        <h4 class="font-bold text-xl text-slate-800">Propiedad de Prueba</h4>
-                        <span class="text-indigo-600 font-black text-lg">U$D 150k</span>
+        </header>
+
+        <main id="main-content" class="flex-1 overflow-hidden relative">
+            
+            <div id="view-map" class="h-full w-full absolute inset-0">
+                <div id="map"></div>
+            </div>
+
+            <div id="view-list" class="h-full w-full absolute inset-0 bg-slate-50 overflow-y-auto hidden pb-32">
+                <div class="p-4 space-y-4" id="property-container">
                     </div>
-                    <button onclick="alert('Conectando con dueño...')" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold active:scale-95 transition-all">Contactar</button>
+            </div>
+
+            <div id="view-add" class="h-full w-full absolute inset-0 bg-white overflow-y-auto hidden p-6 pb-32">
+                <h2 class="text-2xl font-bold mb-6 text-slate-800">Cargar Propiedad</h2>
+                <div class="space-y-4">
+                    <input type="text" id="new-title" placeholder="Título (Ej: Casa de Lujo)" class="w-full p-4 bg-slate-100 rounded-2xl border-none outline-indigo-600">
+                    <input type="number" id="new-price" placeholder="Precio en USD" class="w-full p-4 bg-slate-100 rounded-2xl border-none outline-indigo-600">
+                    <input type="text" id="new-img" placeholder="URL de la imagen (o dejar vacío)" class="w-full p-4 bg-slate-100 rounded-2xl border-none outline-indigo-600">
+                    <button onclick="saveProperty()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg">PUBLICAR AHORA</button>
                 </div>
             </div>
         </main>
-        <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t pb-10 pt-4 flex justify-around items-center z-50">
-            <span class="text-[10px] font-black uppercase text-indigo-600">Mapa</span>
-            <div class="bg-indigo-600 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-xl -mt-12 border-4 border-white">+</div>
-            <span class="text-[10px] font-black uppercase text-slate-400">Lista</span>
+
+        <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 pb-10 pt-4 flex justify-around items-center z-[1000]">
+            <button onclick="switchTab('map')" class="flex flex-col items-center nav-btn" id="btn-map">
+                <span class="text-[10px] font-black uppercase text-indigo-600">Mapa</span>
+            </button>
+            <button onclick="switchTab('add')" class="bg-indigo-600 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-xl -mt-12 border-4 border-white active:scale-90 transition-all">
+                <span class="text-3xl font-light">+</span>
+            </button>
+            <button onclick="switchTab('list')" class="flex flex-col items-center nav-btn text-slate-400" id="btn-list">
+                <span class="text-[10px] font-black uppercase tracking-tighter">Lista</span>
+            </button>
         </nav>
     </div>
+
+    <script>
+        // --- BASE DE DATOS LOCAL (Para que funcione YA) ---
+        let properties = JSON.parse(localStorage.getItem('properties')) || [
+            { id: 1, title: 'Mansión del Lago', price: '240.000', lat: -37.3217, lng: -59.1332, img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=500' },
+            { id: 2, title: 'Depto Centro', price: '85.000', lat: -37.3280, lng: -59.1370, img: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=500' }
+        ];
+
+        // --- INICIALIZAR MAPA ---
+        let map = L.map('map').setView([-37.3217, -59.1332], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        
+        function updateMarkers() {
+            map.eachLayer((layer) => { if (layer instanceof L.Marker) map.removeLayer(layer); });
+            properties.forEach(p => {
+                L.marker([p.lat, p.lng]).addTo(map).bindPopup(`<b>${p.title}</b><br>USD ${p.price}`);
+            });
+        }
+        updateMarkers();
+
+        // --- NAVEGACIÓN ---
+        function switchTab(tab) {
+            document.getElementById('view-map').classList.add('hidden');
+            document.getElementById('view-list').classList.add('hidden');
+            document.getElementById('view-add').classList.add('hidden');
+            document.getElementById(`view-${tab}`).classList.remove('hidden');
+            
+            if(tab === 'list') renderList();
+            if(tab === 'map') setTimeout(() => map.invalidateSize(), 100);
+        }
+
+        // --- RENDERIZAR LISTA ---
+        function renderList() {
+            const container = document.getElementById('property-container');
+            container.innerHTML = properties.map(p => `
+                <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100">
+                    <img src="${p.img}" class="h-48 w-full object-cover">
+                    <div class="p-5">
+                        <h4 class="font-bold text-lg">${p.title}</h4>
+                        <p class="text-indigo-600 font-black">USD ${p.price}</p>
+                        <a href="https://wa.me/5492494000000?text=Hola! Quiero info de: ${p.title}" target="_blank" class="block text-center mt-4 bg-slate-900 text-white py-3 rounded-xl font-bold">WhatsApp</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- GUARDAR NUEVA PROPIEDAD ---
+        function saveProperty() {
+            const title = document.getElementById('new-title').value;
+            const price = document.getElementById('new-price').value;
+            const img = document.getElementById('new-img').value || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500';
+
+            if(!title || !price) return alert("Completa título y precio");
+
+            const newProp = {
+                id: Date.now(),
+                title: title,
+                price: price,
+                lat: -37.32 + (Math.random() * 0.02), // Simula ubicación cerca
+                lng: -59.13 + (Math.random() * 0.02),
+                img: img
+            };
+
+            properties.push(newProp);
+            localStorage.setItem('properties', JSON.stringify(properties));
+            updateMarkers();
+            alert("¡Propiedad publicada!");
+            switchTab('list');
+        }
+    </script>
 </body>
 </html>
