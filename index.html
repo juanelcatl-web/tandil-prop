@@ -3,97 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PropyGo Admin</title>
+    <title>PropyGo | Nexo Inmobiliario</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        #map { height: calc(100vh - 160px); width: 100%; z-index: 1; border-radius: 0 0 2rem 2rem; }
-        .tab-active { color: #4f46e5; font-weight: 900; border-top: 4px solid #4f46e5; }
+        :root { --indigo-primary: #4f46e5; }
+        #map { height: calc(100vh - 160px); width: 100%; z-index: 1; border-bottom: 2px solid #e2e8f0; }
+        .tab-active { color: var(--indigo-primary); font-weight: 900; border-top: 4px solid var(--indigo-primary); }
         .hide-scroll::-webkit-scrollbar { display: none; }
+        .btn-shadow { shadow-sm hover:shadow-md transition-all active:scale-95; }
     </style>
 </head>
-<body class="bg-slate-100 font-sans overflow-hidden hide-scroll">
-    <div id="app" class="flex flex-col h-[100dvh] max-w-lg mx-auto bg-white relative">
+<body class="bg-slate-50 font-sans overflow-hidden hide-scroll">
+
+    <div id="app" class="flex flex-col h-[100dvh] max-w-lg mx-auto bg-white relative shadow-2xl">
         
         <header class="px-6 pt-10 pb-4 flex justify-between items-center bg-white z-[1001]">
             <div>
                 <h1 class="text-2xl font-black text-indigo-600 tracking-tighter uppercase italic">PropyGo</h1>
-                <p id="city-tag" class="text-[9px] font-bold text-slate-400 tracking-widest uppercase">Especialistas en Tandil</p>
+                <p class="text-[9px] font-bold text-slate-400 tracking-[0.2em]">PLATAFORMA TANDIL</p>
             </div>
-            <button onclick="syncData()" class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-[10px] font-bold">ACTUALIZAR</button>
+            <div class="flex gap-2">
+                <button onclick="location.reload()" class="bg-slate-100 p-2 rounded-xl text-[10px] font-bold text-slate-600 border border-slate-200">REFRESCAR</button>
+            </div>
         </header>
 
         <main class="flex-1 relative">
             <div id="view-map" class="absolute inset-0">
                 <div id="map"></div>
+                <button onclick="resetMap()" class="absolute bottom-6 right-6 z-[1002] bg-white p-3 rounded-full shadow-xl border border-slate-200">
+                    📍
+                </button>
             </div>
 
             <div id="view-list" class="absolute inset-0 bg-slate-50 overflow-y-auto hidden pb-32 pt-4 px-4">
-                <div class="flex gap-2 mb-4 overflow-x-auto pb-2 hide-scroll">
-                    <button onclick="filterProps(0)" class="bg-white px-4 py-2 rounded-full text-[10px] font-bold shadow-sm border">TODOS</button>
-                    <button onclick="filterProps(50000)" class="bg-white px-4 py-2 rounded-full text-[10px] font-bold shadow-sm border">HASTA 50k</button>
-                    <button onclick="filterProps(100000)" class="bg-white px-4 py-2 rounded-full text-[10px] font-bold shadow-sm border">HASTA 100k</button>
+                <div class="flex gap-2 mb-6 overflow-x-auto pb-2 hide-scroll">
+                    <button onclick="filterProps(0)" class="bg-white px-5 py-2 rounded-full text-[10px] font-black shadow-sm border border-slate-200 whitespace-nowrap uppercase">Ver Todo</button>
+                    <button onclick="filterProps(60000)" class="bg-white px-5 py-2 rounded-full text-[10px] font-black shadow-sm border border-slate-200 whitespace-nowrap uppercase">Menos de 60k</button>
+                    <button onclick="filterProps(120000)" class="bg-white px-5 py-2 rounded-full text-[10px] font-black shadow-sm border border-slate-200 whitespace-nowrap uppercase">Menos de 120k</button>
                 </div>
-                <div id="list-container" class="space-y-4"></div>
+                <div id="list-container" class="space-y-5"></div>
             </div>
 
             <div id="view-add" class="absolute inset-0 bg-white overflow-y-auto hidden p-6 pb-32">
-                <h2 class="text-2xl font-black mb-6">Administrar Nexo</h2>
+                <h2 class="text-2xl font-extrabold mb-2 text-slate-800">Nueva Propiedad</h2>
+                <p class="text-slate-400 text-xs mb-8 uppercase font-bold tracking-widest">Panel de Administración</p>
+                
                 <div class="space-y-4">
-                    <input type="text" id="p-title" placeholder="Nombre de la Propiedad" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none">
-                    <input type="number" id="p-price" placeholder="Precio USD (Solo números)" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none">
+                    <input type="text" id="p-title" placeholder="Nombre (Ej: Duplex zona Uncas)" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-indigo-500">
+                    <input type="number" id="p-price" placeholder="Precio en USD" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none focus:border-indigo-500">
+                    
                     <div class="flex gap-2">
-                        <input type="text" id="p-address" placeholder="Dirección (Ej: Av. España 400)" class="flex-1 p-4 bg-slate-100 rounded-2xl border-2 border-indigo-100 outline-none">
-                        <button onclick="searchGeo()" class="bg-indigo-600 text-white px-4 rounded-2xl text-[10px] font-bold uppercase tracking-tighter">Ubicar</button>
+                        <input type="text" id="p-address" placeholder="Calle y Nro (Tandil)" class="flex-1 p-4 bg-indigo-50 rounded-2xl border-2 border-indigo-100 outline-none font-bold">
+                        <button onclick="searchGeo()" class="bg-indigo-600 text-white px-6 rounded-2xl text-[10px] font-black uppercase">Ubicar</button>
                     </div>
-                    <p id="geo-status" class="text-[10px] text-slate-400 italic px-2">El buscador prioriza Tandil automáticamente.</p>
-                    <input type="text" id="p-whatsapp" placeholder="WhatsApp (Ej: 5492494112233)" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none">
-                    <input type="text" id="p-img" placeholder="URL de la Foto" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none">
-                    <button onclick="publish()" id="btn-publish" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase shadow-xl mt-4">Publicar Ahora</button>
+                    <p id="geo-status" class="text-[10px] text-slate-500 italic px-2 font-medium">Buscador optimizado para Tandil.</p>
+
+                    <input type="text" id="p-whatsapp" placeholder="WhatsApp (Ej: 2494123456)" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none">
+                    <input type="text" id="p-img" placeholder="Link de la Foto (Opcional)" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none">
+                    
+                    <button onclick="publish()" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-2xl mt-6 active:bg-indigo-600">Publicar en Mapa</button>
                 </div>
             </div>
         </main>
 
         <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex justify-around items-center pt-3 pb-8 z-[2000]">
-            <button onclick="showTab('map')" id="tab-map" class="flex flex-col items-center px-6 py-2 tab-active"><span class="text-[10px] uppercase font-bold">Mapa</span></button>
-            <button onclick="showTab('add')" class="bg-indigo-600 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-xl -mt-12 border-4 border-white"><span class="text-3xl font-light">+</span></button>
-            <button onclick="showTab('list')" id="tab-list" class="flex flex-col items-center px-6 py-2 text-slate-400"><span class="text-[10px] uppercase font-bold">Lista</span></button>
+            <button onclick="showTab('map')" id="tab-map" class="flex flex-col items-center px-6 py-2 tab-active">
+                <span class="text-[10px] font-black uppercase tracking-tighter">Explorar</span>
+            </button>
+            <button onclick="showTab('add')" class="bg-indigo-600 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-xl -mt-12 border-4 border-white transition-transform active:scale-90">
+                <span class="text-3xl font-light">+</span>
+            </button>
+            <button onclick="showTab('list')" id="tab-list" class="flex flex-col items-center px-6 py-2 text-slate-400">
+                <span class="text-[10px] font-black uppercase tracking-tighter">Catálogo</span>
+            </button>
         </nav>
     </div>
 
     <script>
-        let tLat = -37.3217, tLng = -59.1332; // Tandil
-        let props = JSON.parse(localStorage.getItem('propy_nexo_data')) || [];
+        // Coordenadas Tandil por defecto
+        const TANDIL_CENTER = [-37.3217, -59.1332];
+        let currentLat = TANDIL_CENTER[0], currentLng = TANDIL_CENTER[1];
+        let props = JSON.parse(localStorage.getItem('propygo_final_db')) || [];
 
-        // LIMITAR MAPA A ARGENTINA
-        let map = L.map('map', { zoomControl: false }).setView([tLat, tLng], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: 'PropyGo 2024'
-        }).addTo(map);
+        // Inicializar Mapa
+        let map = L.map('map', { zoomControl: false, minZoom: 4 }).setView(TANDIL_CENTER, 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        function renderMarkers(dataToRender = props) {
+        function resetMap() { map.setView(TANDIL_CENTER, 14); }
+
+        function renderMarkers(data = props) {
             map.eachLayer(l => { if(l instanceof L.Marker) map.removeLayer(l) });
-            dataToRender.forEach(p => {
-                L.marker([p.lat, p.lng]).addTo(map).bindPopup(`<b>${p.title}</b><br>U$D ${p.price}`);
+            data.forEach(p => {
+                L.marker([p.lat, p.lng]).addTo(map).bindPopup(`
+                    <div class="text-center font-sans">
+                        <b class="text-indigo-600">${p.title}</b><br>
+                        <span class="font-bold">U$D ${p.price}</span>
+                    </div>
+                `);
             });
         }
 
         async function searchGeo() {
             const val = document.getElementById('p-address').value;
-            if(!val) return alert("Ingresá dirección");
-            // FORZAMOS TANDIL EN LA BÚSQUEDA INTERNA
+            if(!val) return alert("Por favor, escribí una dirección.");
             const query = `${val}, Tandil, Buenos Aires, Argentina`;
             try {
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
                 const data = await res.json();
                 if(data.length > 0) {
-                    tLat = parseFloat(data[0].lat); tLng = parseFloat(data[0].lon);
-                    map.setView([tLat, tLng], 17);
-                    document.getElementById('geo-status').innerText = "✅ Ubicado en: " + data[0].display_name.split(',')[0];
-                    document.getElementById('geo-status').className = "text-[10px] text-green-600 font-bold px-2 uppercase";
-                } else { alert("No se encontró en Tandil. Probá con Calle y Número exacto."); }
-            } catch(e) { console.error(e); }
+                    currentLat = parseFloat(data[0].lat); currentLng = parseFloat(data[0].lon);
+                    map.setView([currentLat, currentLng], 17);
+                    document.getElementById('geo-status').innerText = "✅ UBICACIÓN CONFIRMADA";
+                    document.getElementById('geo-status').className = "text-[10px] text-green-600 font-black px-2";
+                } else {
+                    alert("No encontramos esa dirección en Tandil. Intentá con Calle y Número.");
+                }
+            } catch(e) { alert("Error de conexión al buscar dirección."); }
         }
 
         function showTab(t) {
@@ -101,68 +128,69 @@
             ['map', 'list'].forEach(v => document.getElementById('tab-'+v).classList.remove('tab-active', 'text-slate-400'));
             document.getElementById('view-'+t).classList.remove('hidden');
             if(t !== 'add') document.getElementById('tab-'+t).classList.add('tab-active');
-            if(t === 'map') setTimeout(() => map.invalidateSize(), 200);
+            if(t === 'map') setTimeout(() => map.invalidateSize(), 300);
             if(t === 'list') renderList();
         }
 
-        function renderList(dataToRender = props) {
+        function renderList(data = props) {
             const container = document.getElementById('list-container');
-            if(dataToRender.length === 0) { container.innerHTML = "<p class='text-center text-slate-400 mt-20'>No hay propiedades aquí.</p>"; return; }
-            container.innerHTML = dataToRender.map(p => `
-                <div class="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm p-2 mb-4 relative">
-                    <button onclick="deleteProp(${p.id})" class="absolute top-4 right-4 bg-red-500 text-white w-8 h-8 rounded-full font-bold shadow-lg z-10">✕</button>
-                    <img src="${p.img}" class="h-44 w-full object-cover rounded-2xl shadow-inner bg-slate-200">
-                    <div class="p-4 text-left">
-                        <h4 class="font-bold text-slate-900 leading-tight">${p.title}</h4>
-                        <p class="text-indigo-600 font-black text-2xl mb-4">U$D ${p.price}</p>
-                        <a href="https://wa.me/${p.whatsapp}?text=Hola, info por: ${p.title}" class="block text-center bg-slate-900 text-white py-4 rounded-2xl font-bold uppercase text-[10px] tracking-[0.2em] active:scale-95 transition-all">WhatsApp Nexo</a>
+            if(data.length === 0) {
+                container.innerHTML = `<div class="text-center py-20"><p class="text-slate-400 font-bold">No hay propiedades cargadas.</p></div>`;
+                return;
+            }
+            container.innerHTML = data.map(p => `
+                <div class="bg-white rounded-[2.5rem] overflow-hidden border border-slate-200 shadow-sm p-2 relative">
+                    <button onclick="deleteProp(${p.id})" class="absolute top-5 right-5 bg-white/90 backdrop-blur text-red-500 w-9 h-9 rounded-full font-black shadow-lg z-10 border border-red-100 active:scale-75 transition-all">✕</button>
+                    <img src="${p.img || 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=500'}" class="h-56 w-full object-cover rounded-[2rem] bg-slate-100">
+                    <div class="p-5 text-left">
+                        <h4 class="font-black text-slate-800 text-lg leading-tight uppercase tracking-tighter">${p.title}</h4>
+                        <p class="text-indigo-600 font-black text-3xl my-2">U$D ${p.price}</p>
+                        <a href="https://wa.me/${p.whatsapp.replace(/\D/g,'')}?text=Hola, solicito info por la propiedad: ${p.title}" class="block text-center bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest mt-4">Consultar WhatsApp</a>
                     </div>
                 </div>
             `).join('');
         }
 
-        function filterProps(maxPrice) {
-            if(maxPrice === 0) renderList(props);
-            else {
-                const filtered = props.filter(p => parseInt(p.price) <= maxPrice);
-                renderList(filtered);
-            }
+        function filterProps(max) {
+            if(max === 0) renderList(props);
+            else renderList(props.filter(p => parseInt(p.price) <= max));
         }
 
         function publish() {
             const title = document.getElementById('p-title').value;
             const price = document.getElementById('p-price').value;
-            const wa = document.getElementById('p-whatsapp').value;
-            const img = document.getElementById('p-img').value || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=500';
+            let wa = document.getElementById('p-whatsapp').value;
+            const img = document.getElementById('p-img').value;
 
-            if(!title || !price || !wa) return alert("Título, Precio y WhatsApp son obligatorios");
+            if(!title || !price || !wa) return alert("Por favor completá Título, Precio y WhatsApp.");
+            
+            // Si el número empieza con 249, agregar el prefijo de Argentina
+            if(wa.startsWith('249')) wa = '549' + wa;
 
-            const newProp = { id: Date.now(), title, price, whatsapp: wa, lat: tLat, lng: tLng, img };
-            props.push(newProp);
-            saveAndSync();
-            alert("¡Propiedad agregada!");
+            props.push({ id: Date.now(), title, price, whatsapp: wa, lat: currentLat, lng: currentLng, img });
+            save();
+            alert("¡Propiedad publicada con éxito!");
             showTab('map');
+            // Limpiar campos
+            document.getElementById('p-title').value = '';
+            document.getElementById('p-price').value = '';
+            document.getElementById('p-address').value = '';
         }
 
         function deleteProp(id) {
-            if(confirm("¿Eliminar esta propiedad definitivamente?")) {
+            if(confirm("¿Estás seguro de eliminar esta publicación?")) {
                 props = props.filter(p => p.id !== id);
-                saveAndSync();
+                save();
                 renderList();
             }
         }
 
-        function saveAndSync() {
-            localStorage.setItem('propy_nexo_data', JSON.stringify(props));
+        function save() {
+            localStorage.setItem('propygo_final_db', JSON.stringify(props));
             renderMarkers();
         }
 
-        function syncData() {
-            renderMarkers();
-            renderList();
-        }
-
-        window.onload = syncData;
+        window.onload = () => { renderMarkers(); renderList(); };
     </script>
 </body>
 </html>
