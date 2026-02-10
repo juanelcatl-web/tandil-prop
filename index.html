@@ -3,86 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PropyGo Cloud</title>
+    <title>PropyGo Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        #map { height: calc(100vh - 160px); width: 100%; z-index: 1; }
+        #map { height: calc(100vh - 160px); width: 100%; z-index: 1; border-radius: 0 0 2rem 2rem; }
         .tab-active { color: #4f46e5; font-weight: 900; border-top: 4px solid #4f46e5; }
-        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #4f46e5; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .hide-scroll::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="bg-slate-100 font-sans overflow-hidden">
+<body class="bg-slate-100 font-sans overflow-hidden hide-scroll">
     <div id="app" class="flex flex-col h-[100dvh] max-w-lg mx-auto bg-white relative">
-        <header class="px-6 pt-10 pb-4 flex justify-between items-center bg-white border-b border-slate-100 z-[1001]">
+        
+        <header class="px-6 pt-10 pb-4 flex justify-between items-center bg-white z-[1001]">
             <div>
                 <h1 class="text-2xl font-black text-indigo-600 tracking-tighter uppercase italic">PropyGo</h1>
-                <div id="sync-status" class="flex items-center gap-1 text-[8px] font-bold text-green-500 uppercase tracking-widest">
-                    ● En Línea
-                </div>
+                <p id="city-tag" class="text-[9px] font-bold text-slate-400 tracking-widest uppercase">Especialistas en Tandil</p>
             </div>
-            <button onclick="syncData()" class="p-2 bg-slate-50 rounded-xl border border-slate-200 text-[10px] font-bold active:bg-slate-200">ACTUALIZAR</button>
+            <button onclick="syncData()" class="bg-slate-50 p-2 rounded-xl border border-slate-200 text-[10px] font-bold">ACTUALIZAR</button>
         </header>
 
         <main class="flex-1 relative">
-            <div id="view-map" class="absolute inset-0"><div id="map"></div></div>
-            <div id="view-list" class="absolute inset-0 bg-slate-50 overflow-y-auto hidden pb-32 pt-4 px-4">
-                <div id="list-container" class="grid grid-cols-1 gap-4 text-center">
-                    <p class="text-slate-400 text-sm mt-10">Cargando propiedades...</p>
-                </div>
+            <div id="view-map" class="absolute inset-0">
+                <div id="map"></div>
             </div>
+
+            <div id="view-list" class="absolute inset-0 bg-slate-50 overflow-y-auto hidden pb-32 pt-4 px-4">
+                <div class="flex gap-2 mb-4 overflow-x-auto pb-2 hide-scroll">
+                    <button onclick="filterProps(0)" class="bg-white px-4 py-2 rounded-full text-[10px] font-bold shadow-sm border">TODOS</button>
+                    <button onclick="filterProps(50000)" class="bg-white px-4 py-2 rounded-full text-[10px] font-bold shadow-sm border">HASTA 50k</button>
+                    <button onclick="filterProps(100000)" class="bg-white px-4 py-2 rounded-full text-[10px] font-bold shadow-sm border">HASTA 100k</button>
+                </div>
+                <div id="list-container" class="space-y-4"></div>
+            </div>
+
             <div id="view-add" class="absolute inset-0 bg-white overflow-y-auto hidden p-6 pb-32">
-                <h2 class="text-2xl font-black mb-6">Panel Nexo</h2>
+                <h2 class="text-2xl font-black mb-6">Administrar Nexo</h2>
                 <div class="space-y-4">
-                    <input type="text" id="p-title" placeholder="Título" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none">
-                    <input type="number" id="p-price" placeholder="Precio USD" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none">
+                    <input type="text" id="p-title" placeholder="Nombre de la Propiedad" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none">
+                    <input type="number" id="p-price" placeholder="Precio USD (Solo números)" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none">
                     <div class="flex gap-2">
-                        <input type="text" id="p-address" placeholder="Ciudad y Dirección" class="flex-1 p-4 bg-slate-50 rounded-2xl border outline-none">
-                        <button onclick="searchGeo()" class="bg-indigo-600 text-white px-4 rounded-2xl text-[10px] font-bold">UBICAR</button>
+                        <input type="text" id="p-address" placeholder="Dirección (Ej: Av. España 400)" class="flex-1 p-4 bg-slate-100 rounded-2xl border-2 border-indigo-100 outline-none">
+                        <button onclick="searchGeo()" class="bg-indigo-600 text-white px-4 rounded-2xl text-[10px] font-bold uppercase tracking-tighter">Ubicar</button>
                     </div>
-                    <input type="text" id="p-whatsapp" placeholder="WhatsApp Vendedor (ej: 549249...)" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none">
-                    <input type="text" id="p-img" placeholder="URL de imagen" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none">
-                    <button onclick="publish()" id="btn-publish" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase shadow-xl">Publicar en la Nube</button>
+                    <p id="geo-status" class="text-[10px] text-slate-400 italic px-2">El buscador prioriza Tandil automáticamente.</p>
+                    <input type="text" id="p-whatsapp" placeholder="WhatsApp (Ej: 5492494112233)" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none">
+                    <input type="text" id="p-img" placeholder="URL de la Foto" class="w-full p-4 bg-slate-50 rounded-2xl border outline-none">
+                    <button onclick="publish()" id="btn-publish" class="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase shadow-xl mt-4">Publicar Ahora</button>
                 </div>
             </div>
         </main>
 
-        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center pt-3 pb-8 z-[2000]">
-            <button onclick="showTab('map')" id="tab-map" class="flex flex-col items-center px-6 py-2 tab-active"><span class="text-[10px] uppercase font-bold">Explorar</span></button>
-            <button onclick="showTab('add')" class="bg-indigo-600 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-xl -mt-12 border-4 border-white">
-                <span class="text-3xl">+</span>
-            </button>
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 flex justify-around items-center pt-3 pb-8 z-[2000]">
+            <button onclick="showTab('map')" id="tab-map" class="flex flex-col items-center px-6 py-2 tab-active"><span class="text-[10px] uppercase font-bold">Mapa</span></button>
+            <button onclick="showTab('add')" class="bg-indigo-600 w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-xl -mt-12 border-4 border-white"><span class="text-3xl font-light">+</span></button>
             <button onclick="showTab('list')" id="tab-list" class="flex flex-col items-center px-6 py-2 text-slate-400"><span class="text-[10px] uppercase font-bold">Lista</span></button>
         </nav>
     </div>
 
     <script>
-        // CONFIGURACIÓN DE NUBE (Mockup funcional para testeo)
-        let tLat = -37.3217, tLng = -59.1332;
-        let props = JSON.parse(localStorage.getItem('propy_cloud_data')) || [];
+        let tLat = -37.3217, tLng = -59.1332; // Tandil
+        let props = JSON.parse(localStorage.getItem('propy_nexo_data')) || [];
 
+        // LIMITAR MAPA A ARGENTINA
         let map = L.map('map', { zoomControl: false }).setView([tLat, tLng], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'PropyGo 2024'
+        }).addTo(map);
 
-        function renderMarkers() {
+        function renderMarkers(dataToRender = props) {
             map.eachLayer(l => { if(l instanceof L.Marker) map.removeLayer(l) });
-            props.forEach(p => {
-                L.marker([p.lat, p.lng]).addTo(map).bindPopup(`<b>${p.title}</b><br>USD ${p.price}`);
+            dataToRender.forEach(p => {
+                L.marker([p.lat, p.lng]).addTo(map).bindPopup(`<b>${p.title}</b><br>U$D ${p.price}`);
             });
         }
 
         async function searchGeo() {
             const val = document.getElementById('p-address').value;
             if(!val) return alert("Ingresá dirección");
+            // FORZAMOS TANDIL EN LA BÚSQUEDA INTERNA
+            const query = `${val}, Tandil, Buenos Aires, Argentina`;
             try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}`);
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
                 const data = await res.json();
                 if(data.length > 0) {
                     tLat = parseFloat(data[0].lat); tLng = parseFloat(data[0].lon);
-                    map.setView([tLat, tLng], 16);
-                }
+                    map.setView([tLat, tLng], 17);
+                    document.getElementById('geo-status').innerText = "✅ Ubicado en: " + data[0].display_name.split(',')[0];
+                    document.getElementById('geo-status').className = "text-[10px] text-green-600 font-bold px-2 uppercase";
+                } else { alert("No se encontró en Tandil. Probá con Calle y Número exacto."); }
             } catch(e) { console.error(e); }
         }
 
@@ -95,59 +105,61 @@
             if(t === 'list') renderList();
         }
 
-        function renderList() {
+        function renderList(dataToRender = props) {
             const container = document.getElementById('list-container');
-            if(props.length === 0) { container.innerHTML = "<p class='mt-10 text-slate-400'>No hay propiedades en tu zona aún.</p>"; return; }
-            container.innerHTML = props.map(p => `
-                <div class="bg-white rounded-[2rem] overflow-hidden border border-slate-100 shadow-sm p-2 mb-4">
-                    <img src="${p.img}" class="h-48 w-full object-cover rounded-2xl shadow-inner">
-                    <div class="p-4">
-                        <div class="flex justify-between items-start mb-2">
-                            <h4 class="font-bold text-lg text-slate-900 text-left">${p.title}</h4>
-                            <span class="bg-green-100 text-green-700 text-[8px] font-bold px-2 py-1 rounded">DISPONIBLE</span>
-                        </div>
-                        <p class="text-indigo-600 font-black text-2xl text-left">U$D ${p.price}</p>
-                        <a href="https://wa.me/${p.whatsapp}?text=Hola, solicito información de: ${p.title}" class="block text-center mt-4 bg-slate-900 text-white py-4 rounded-2xl font-bold uppercase text-xs tracking-widest active:bg-indigo-600 transition-colors">Contactar Vendedor</a>
+            if(dataToRender.length === 0) { container.innerHTML = "<p class='text-center text-slate-400 mt-20'>No hay propiedades aquí.</p>"; return; }
+            container.innerHTML = dataToRender.map(p => `
+                <div class="bg-white rounded-[2rem] overflow-hidden border border-slate-200 shadow-sm p-2 mb-4 relative">
+                    <button onclick="deleteProp(${p.id})" class="absolute top-4 right-4 bg-red-500 text-white w-8 h-8 rounded-full font-bold shadow-lg z-10">✕</button>
+                    <img src="${p.img}" class="h-44 w-full object-cover rounded-2xl shadow-inner bg-slate-200">
+                    <div class="p-4 text-left">
+                        <h4 class="font-bold text-slate-900 leading-tight">${p.title}</h4>
+                        <p class="text-indigo-600 font-black text-2xl mb-4">U$D ${p.price}</p>
+                        <a href="https://wa.me/${p.whatsapp}?text=Hola, info por: ${p.title}" class="block text-center bg-slate-900 text-white py-4 rounded-2xl font-bold uppercase text-[10px] tracking-[0.2em] active:scale-95 transition-all">WhatsApp Nexo</a>
                     </div>
                 </div>
             `).join('');
         }
 
+        function filterProps(maxPrice) {
+            if(maxPrice === 0) renderList(props);
+            else {
+                const filtered = props.filter(p => parseInt(p.price) <= maxPrice);
+                renderList(filtered);
+            }
+        }
+
         function publish() {
-            const btn = document.getElementById('btn-publish');
-            btn.innerText = "Sincronizando...";
             const title = document.getElementById('p-title').value;
             const price = document.getElementById('p-price').value;
             const wa = document.getElementById('p-whatsapp').value;
             const img = document.getElementById('p-img').value || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=500';
 
-            if(!title || !price || !wa) { btn.innerText = "Publicar en la Nube"; return alert("Faltan datos"); }
+            if(!title || !price || !wa) return alert("Título, Precio y WhatsApp son obligatorios");
 
             const newProp = { id: Date.now(), title, price, whatsapp: wa, lat: tLat, lng: tLng, img };
             props.push(newProp);
-            
-            // Simulación de guardado en nube
-            localStorage.setItem('propy_cloud_data', JSON.stringify(props));
-            
-            setTimeout(() => {
-                alert("¡Sincronizado con éxito! Todos los usuarios verán este anuncio.");
-                btn.innerText = "Publicar en la Nube";
-                renderMarkers();
-                showTab('list');
-            }, 1000);
+            saveAndSync();
+            alert("¡Propiedad agregada!");
+            showTab('map');
+        }
+
+        function deleteProp(id) {
+            if(confirm("¿Eliminar esta propiedad definitivamente?")) {
+                props = props.filter(p => p.id !== id);
+                saveAndSync();
+                renderList();
+            }
+        }
+
+        function saveAndSync() {
+            localStorage.setItem('propy_nexo_data', JSON.stringify(props));
+            renderMarkers();
         }
 
         function syncData() {
-            const status = document.getElementById('sync-status');
-            status.innerHTML = '<div class="loading-spinner"></div> Actualizando...';
-            status.className = "flex items-center gap-1 text-[8px] font-bold text-indigo-500 uppercase tracking-widest";
-            
-            setTimeout(() => {
-                renderMarkers();
-                renderList();
-                status.innerHTML = '● En Línea';
-                status.className = "flex items-center gap-1 text-[8px] font-bold text-green-500 uppercase tracking-widest";
-            }, 1500);
+            renderMarkers();
+            renderList();
         }
 
         window.onload = syncData;
