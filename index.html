@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>TandilProp v32</title>
+    <title>TandilProp v33</title>
 
-    <link rel="manifest" href='data:application/manifest+json,{"name":"TandilProp","short_name":"TandilProp","start_url":"/tandilprop/","display":"standalone","background_color":"#ffffff","theme_color":"#4f46e5","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/609/609803.png","sizes":"512x512","type":"image/png"}]}'>
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/609/609803.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -48,7 +51,7 @@
     <header>
         <div class="flex justify-between items-center mb-2">
             <h1 class="text-2xl font-black text-indigo-600 italic">TANDILPROP</h1>
-            <div class="bg-indigo-100 px-3 py-1 rounded-full text-[10px] font-black text-indigo-600">v32 PRO</div>
+            <div class="bg-indigo-100 px-3 py-1 rounded-full text-[10px] font-black text-indigo-600">v33 FINAL</div>
         </div>
         <div class="flex gap-2">
             <select id="f-type" onchange="loadData()" class="flex-1 p-2 bg-slate-50 border rounded-lg text-[10px] font-bold">
@@ -93,9 +96,13 @@
 </div>
 
 <script>
-    // REGISTRO DEL SERVICE WORKER (Para activar instalación en Chrome)
+    // Registro del SW
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(() => console.log("Instalación habilitada"));
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW registrado', reg))
+          .catch(err => console.log('Error SW', err));
+      });
     }
 
     const firebaseConfig = {
